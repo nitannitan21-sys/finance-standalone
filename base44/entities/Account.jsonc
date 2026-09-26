@@ -1,0 +1,48 @@
+{
+  "name": "Account",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Bank",
+        "E-wallet",
+        "Cash"
+      ],
+      "default": "Bank"
+    },
+    "purpose": {
+      "type": "string",
+      "default": "General"
+    },
+    "opening_balance": {
+      "type": "number",
+      "default": 0
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "PHP",
+        "USD"
+      ],
+      "default": "PHP"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

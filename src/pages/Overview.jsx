@@ -1,0 +1,182 @@
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { useFinance } from '@/lib/FinanceContext';
+import {
+  formatMoney,
+  formatMoneyByCurrency,
+  totalBalancePHP,
+  sumByTypePHP,
+  savingsTotalPHP,
+  safeToSpend,
+  monthTransactions,
+  sumByCategoryPHP,
+  spendingByCategoryPHP,
+  netWorthSeries,
+  monthLabel,
+  monthShort,
+  accountName,
+  txAccountCurrency
+} from '@/lib/finance';
+import TransactionModal from '@/components/TransactionModal';
+import { Button } from '@/components/ui/button';
+import { Plus, TrendingUp, TrendingDown, Wallet, PiggyBank, ShieldCheck } from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid
+} from 'recharts';
+
+function Card({ children, className }) {
+  return <div className={`bg-card border border-border rounded-2xl p-5 ${className || ''}`}>{children}</div>;
+}
+
+function Stat({ icon: Icon, label, value, tone }) {
+  const tones = { green: 'text-emerald-600', red: 'text-red-600', neutral: 'text-foreground' };
+  return (
+    <Card>
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Icon className="w-4 h-4" />
+        <span className="text-[11px] font-semibold tracking-wide uppercase">{label}</span>
+      </div>
+      <div className={`text-2xl font-extrabold mt-2 ${tones[tone] || 'text-foreground'}`}>{value}</div>
+    </Card>
+  );
+}
+
+export default function Overview() {
+  const { transactions, accounts, budget, loading, rate } = useFinance();
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const month = new Date().toISOString().slice(0, 7);
+  const mTx = useMemo(() => monthTransactions(transactions, month), [transactions, month]);
+  const totalLeft = useMemo(() => totalBalancePHP(accounts, transactions, rate), [accounts, transactions, rate]);
+  const allIncome = sumByTypePHP(transactions, accounts, rate, 'income');
+  const allExpenses = sumByTypePHP(transactions, accounts, rate, 'expense');
+  const savings = savingsTotalPHP(transactions, accounts, rate);
+  const mIncome = sumByTypePHP(mTx, accounts, rate, 'income');
+  const mExpenses = sumByTypePHP(mTx, accounts, rate, 'expense');
+  const mSavings = savingsTotalPHP(mTx, accounts, rate);
+  const mSentHome = sumByCategoryPHP(mTx, accounts, rate, 'Sent Home');
+  const safe = safeToSpend(mIncome, mExpenses, mSavings, mSentHome, budget);
+  const catData = useMemo(() => spendingByCategoryPHP(transactions, accounts, rate).slice(0, 6), [transactions, accounts, rate]);
+  const netSeries = useMemo(() => netWorthSeries(transactions, accounts, rate), [transactions, accounts, rate]);
+  const recent = useMemo(
+    () => [...transactions].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 7),
+    [transactions]
+  );
+
+  if (loading) return <div className="p-8 text-muted-foreground">Loading your finances…</div>;
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-2xl font-extrabold text-foreground">Overview</h1>
+          <p className="text-sm text-muted-foreground">
+            Your money at a glance · {new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+        <Button onClick={() => setModalOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Plus className="w-4 h-4 mr-1" /> Add Transaction
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <Stat icon={Wallet} label="Money Left" value={formatMoney(totalLeft)} tone="neutral" />
+        <Stat icon={TrendingUp} label="Income" value={formatMoney(allIncome)} tone="green" />
+        <Stat icon={TrendingDown} label="Expenses" value={formatMoney(allExpenses)} tone="red" />
+        <Stat icon={PiggyBank} label="Savings" value={formatMoney(savings)} tone="neutral" />
+        <Stat icon={ShieldCheck} label="Safe to Spend" value={formatMoney(safe)} tone="green" />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4 mt-4">
+        <Card>
+          <h2 className="font-bold text-foreground mb-3">Spending by Category</h2>
+          {catData.length ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={catData} layout="vertical" margin={{ left: 8, right: 16 }}>
+                <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
+                <XAxis
+                  type="number"
+                  tickFormatter={(v) => '₱' + (v >= 1000 ? v / 1000 + 'k' : v)}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis type="category" dataKey="category" width={90} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip formatter={(v) => formatMoney(v)} contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))' }} />
+                <Bar dataKey="amount" radius={[0, 6, 6, 0]} fill="hsl(var(--foreground))" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-sm text-muted-foreground py-12 text-center">No spending recorded yet.</div>
+          )}
+        </Card>
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-foreground">Recent Transactions</h2>
+            <Link to="/transactions" className="text-xs text-muted-foreground hover:text-foreground">View all</Link>
+          </div>
+          {recent.length ? (
+            <div className="flex flex-col divide-y divide-border">
+              {recent.map((t) => (
+                <div key={t.id} className="flex items-center justify-between py-2.5">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-foreground truncate">{t.note || t.category}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t.date} · {accountName(accounts, t.account_id)}
+                      {t.type === 'transfer' ? ` → ${accountName(accounts, t.to_account_id)}` : ''}
+                    </div>
+                  </div>
+                  <div
+                    className={`text-sm font-bold ${
+                      t.type === 'income' ? 'text-emerald-600' : t.type === 'expense' ? 'text-red-600' : 'text-foreground'
+                    }`}
+                  >
+                    {t.type === 'income' ? '+' : t.type === 'expense' ? '-' : ''}
+                    {formatMoneyByCurrency(t.amount, txAccountCurrency(t, accounts))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground py-12 text-center">No transactions yet. Add your first one.</div>
+          )}
+        </Card>
+      </div>
+
+      <Card className="mt-4">
+        <h2 className="font-bold text-foreground mb-3">Net Worth Growth</h2>
+        {netSeries.length ? (
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={netSeries} margin={{ left: 8, right: 16, top: 8 }}>
+              <defs>
+                <linearGradient id="nwFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" tickFormatter={(v) => monthShort(v)} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+              <YAxis tickFormatter={(v) => '₱' + (v >= 1000 ? v / 1000 + 'k' : v)} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+              <Tooltip
+                labelFormatter={(v) => monthLabel(v)}
+                formatter={(v) => [formatMoney(v), 'Net Worth']}
+                contentStyle={{ borderRadius: 12, border: '1px solid hsl(var(--border))', background: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))' }}
+              />
+              <Area type="monotone" dataKey="netWorth" stroke="#3b82f6" strokeWidth={2.5} fill="url(#nwFill)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="text-sm text-muted-foreground py-12 text-center">Add transactions to see your net worth grow.</div>
+        )}
+      </Card>
+
+      <TransactionModal open={modalOpen} onClose={() => setModalOpen(false)} editing={null} />
+    </div>
+  );
+}
