@@ -1,0 +1,43 @@
+PERSONAL FINANCE PWA ICON UPDATE
+
+Copy these four PNG files into:
+C:\Finance-Standalone\public\
+
+Files:
+- pwa-192.png
+- pwa-512.png
+- pwa-512-maskable.png
+- apple-touch-icon.png
+
+Then update vite.config.js so the VitePWA manifest icons are:
+
+icons: [
+  {
+    src: '/pwa-192.png',
+    sizes: '192x192',
+    type: 'image/png',
+  },
+  {
+    src: '/pwa-512.png',
+    sizes: '512x512',
+    type: 'image/png',
+  },
+  {
+    src: '/pwa-512-maskable.png',
+    sizes: '512x512',
+    type: 'image/png',
+    purpose: 'maskable',
+  },
+],
+
+Also add this inside the <head> of index.html:
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+After that run:
+npm.cmd run build
+git add .
+git commit -m "Update Personal Finance app icon"
+git push
+
+Netlify should automatically deploy the new version.
