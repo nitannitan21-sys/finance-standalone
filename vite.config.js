@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: {
         name: 'Personal Finance',
-        short_name: 'Finance',
+        short_name: 'SFinance',
         description: 'Personal finance tracker',
         theme_color: '#1f2937',
         background_color: '#ffffff',
