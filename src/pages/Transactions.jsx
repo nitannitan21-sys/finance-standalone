@@ -8,7 +8,15 @@ import {
 import { supabase } from '@/api/supabaseClient';
 import TransactionModal from '@/components/TransactionModal';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  ArrowUpRight,
+  ArrowDownRight,
+  ArrowLeftRight,
+  ReceiptText
+} from 'lucide-react';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -16,6 +24,54 @@ const FILTERS = [
   { key: 'expense', label: 'Money Out' },
   { key: 'transfer', label: 'Transfers' }
 ];
+
+function TransactionIcon({ type }) {
+  if (type === 'income') {
+    return (
+      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+        <ArrowDownRight className="w-5 h-5 text-emerald-500" />
+      </div>
+    );
+  }
+
+  if (type === 'expense') {
+    return (
+      <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
+        <ArrowUpRight className="w-5 h-5 text-rose-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+      <ArrowLeftRight className="w-5 h-5 text-primary" />
+    </div>
+  );
+}
+
+function TypeBadge({ type }) {
+  const styles = {
+    income: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    expense: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+    transfer: 'bg-primary/10 text-primary'
+  };
+
+  const labels = {
+    income: 'Money In',
+    expense: 'Money Out',
+    transfer: 'Transfer'
+  };
+
+  return (
+    <span
+      className={`text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full ${
+        styles[type] || 'bg-muted text-muted-foreground'
+      }`}
+    >
+      {labels[type] || type}
+    </span>
+  );
+}
 
 export default function Transactions() {
   const {
@@ -48,7 +104,7 @@ export default function Transactions() {
   if (loading) {
     return (
       <div className="p-8 text-muted-foreground">
-        Loading…
+        Loading transactions…
       </div>
     );
   }
@@ -88,16 +144,22 @@ export default function Transactions() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-2xl font-extrabold text-foreground">
-            Transactions
-          </h1>
+    <div className="p-4 md:p-6 max-w-7xl mx-auto">
 
-          <p className="text-sm text-muted-foreground">
-            {list.length} record{list.length === 1 ? '' : 's'}
-          </p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-9 rounded-full bg-primary" />
+
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+              Transactions
+            </h1>
+
+            <p className="text-sm text-muted-foreground mt-1">
+              {list.length} record{list.length === 1 ? '' : 's'}
+            </p>
+          </div>
         </div>
 
         <Button
@@ -105,146 +167,218 @@ export default function Transactions() {
             setEditing(null);
             setModalOpen(true);
           }}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/10"
         >
-          <Plus className="w-4 h-4 mr-1" />
-          Add
+          <Plus className="w-4 h-4 mr-1.5" />
+          Add Transaction
         </Button>
       </div>
 
-      <div className="flex gap-2 mb-4 overflow-x-auto">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`px-3 h-8 rounded-full text-xs font-medium border whitespace-nowrap ${
-              filter === f.key
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card text-muted-foreground border-border hover:bg-accent'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
+      {/* Filter bar */}
+      <div className="bg-card/80 backdrop-blur-sm border border-border/70 rounded-2xl p-2 mb-5 shadow-sm">
+        <div className="flex gap-1.5 overflow-x-auto">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => {
+                setFilter(f.key);
+                setExpanded(false);
+              }}
+              className={`
+                px-4 h-9 rounded-xl text-xs font-semibold
+                whitespace-nowrap transition-all
+                ${
+                  filter === f.key
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                }
+              `}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+      {/* Transaction list */}
+      <div className="bg-card/95 backdrop-blur-sm border border-border/70 rounded-2xl overflow-hidden shadow-sm">
+
         {list.length ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
-                <tr>
-                  <th className="text-left px-4 py-3 font-semibold">
-                    Date
-                  </th>
+          <div className="divide-y divide-border/70">
 
-                  <th className="text-left px-4 py-3 font-semibold">
-                    Description
-                  </th>
+            {shown.map((t) => {
+              const currency = txAccountCurrency(t, accounts);
 
-                  <th className="text-left px-4 py-3 font-semibold">
-                    Category
-                  </th>
+              const amountPrefix =
+                t.type === 'income'
+                  ? '+'
+                  : t.type === 'expense'
+                    ? '-'
+                    : '↔';
 
-                  <th className="text-left px-4 py-3 font-semibold">
-                    Account
-                  </th>
+              const amountColor =
+                t.type === 'income'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : t.type === 'expense'
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : 'text-primary';
 
-                  <th className="text-right px-4 py-3 font-semibold">
-                    Amount
-                  </th>
+              const fromAccount = accountName(
+                accounts,
+                t.account_id
+              );
 
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
+              const toAccount =
+                t.type === 'transfer'
+                  ? accountName(accounts, t.to_account_id)
+                  : null;
 
-              <tbody className="divide-y divide-border">
-                {shown.map((t) => (
-                  <tr
-                    key={t.id}
-                    className="hover:bg-muted/40"
-                  >
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                      {t.date}
-                    </td>
+              return (
+                <div
+                  key={t.id}
+                  className="
+                    group
+                    px-4 md:px-5 py-4
+                    hover:bg-muted/30
+                    transition-colors
+                  "
+                >
+                  <div className="flex items-center gap-3">
 
-                    <td className="px-4 py-3 text-foreground">
-                      {t.note || '—'}
-                    </td>
+                    <TransactionIcon type={t.type} />
 
-                    <td className="px-4 py-3">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                        {t.category}
-                      </span>
-                    </td>
+                    <div className="flex-1 min-w-0">
 
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {accountName(accounts, t.account_id)}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="font-semibold text-foreground truncate">
+                          {t.note || 'No description'}
+                        </div>
 
-                      {t.type === 'transfer'
-                        ? ` → ${accountName(
-                            accounts,
-                            t.to_account_id
-                          )}`
-                        : ''}
-                    </td>
+                        <TypeBadge type={t.type} />
+                      </div>
 
-                    <td
-                      className={`px-4 py-3 text-right font-bold ${
-                        t.type === 'income'
-                          ? 'text-emerald-600'
-                          : t.type === 'expense'
-                            ? 'text-red-600'
-                            : 'text-foreground'
-                      }`}
-                    >
-                      {t.type === 'income'
-                        ? '+'
-                        : t.type === 'expense'
-                          ? '-'
-                          : '↔ '}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs text-muted-foreground">
 
-                      {formatMoneyByCurrency(
-                        t.amount,
-                        txAccountCurrency(t, accounts)
-                      )}
-                    </td>
+                        <span>{t.date}</span>
 
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <span className="text-border">•</span>
+
+                        <span>
+                          {fromAccount}
+                          {toAccount ? ` → ${toAccount}` : ''}
+                        </span>
+
+                        {t.category && (
+                          <>
+                            <span className="text-border">•</span>
+                            <span>{t.category}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="text-right shrink-0">
+                      <div
+                        className={`font-extrabold text-base md:text-lg ${amountColor}`}
+                      >
+                        {amountPrefix}{' '}
+                        {formatMoneyByCurrency(
+                          t.amount,
+                          currency
+                        )}
+                      </div>
+
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
+                        {currency}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 ml-1">
+
                       <button
                         onClick={() => {
                           setEditing(t);
                           setModalOpen(true);
                         }}
-                        className="p-1.5 text-muted-foreground hover:text-foreground"
+                        className="
+                          p-2 rounded-lg
+                          text-muted-foreground
+                          hover:text-foreground
+                          hover:bg-accent
+                          transition-colors
+                        "
+                        title="Edit transaction"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <Pencil className="w-4 h-4" />
                       </button>
 
                       <button
                         onClick={() => handleDelete(t.id)}
                         disabled={deleting}
-                        className="p-1.5 text-muted-foreground hover:text-red-600 disabled:opacity-50"
+                        className="
+                          p-2 rounded-lg
+                          text-muted-foreground
+                          hover:text-rose-600
+                          hover:bg-rose-500/10
+                          disabled:opacity-50
+                          transition-colors
+                        "
+                        title="Delete transaction"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
           </div>
         ) : (
-          <div className="p-10 text-center text-sm text-muted-foreground">
-            No transactions here.
+
+          /* Empty state */
+          <div className="p-12 text-center">
+
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <ReceiptText className="w-6 h-6 text-primary" />
+            </div>
+
+            <h2 className="font-bold text-foreground text-lg">
+              No transactions
+            </h2>
+
+            <p className="text-sm text-muted-foreground mt-1 mb-5">
+              There are no transactions in this view yet.
+            </p>
+
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setModalOpen(true);
+              }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Transaction
+            </Button>
+
           </div>
         )}
 
+        {/* See more */}
         {list.length > 10 && (
-          <div className="p-3 text-center border-t border-border">
+          <div className="p-3 border-t border-border/70 text-center bg-muted/10">
             <button
               onClick={() => setExpanded((e) => !e)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="
+                text-sm font-semibold
+                text-muted-foreground
+                hover:text-primary
+                transition-colors
+              "
             >
               {expanded
                 ? 'See Less'
@@ -252,6 +386,7 @@ export default function Transactions() {
             </button>
           </div>
         )}
+
       </div>
 
       <TransactionModal
