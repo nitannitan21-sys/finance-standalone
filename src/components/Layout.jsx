@@ -387,7 +387,118 @@ function OceanBackground() {
     </div>
   );
 }
+function MobileOceanBackground() {
+  return (
+    <div
+      className="pointer-events-none fixed inset-0 overflow-hidden"
+      style={{ zIndex: 0 }}
+      aria-hidden="true"
+    >
+      {/* Soft blue atmosphere */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(
+              circle at 50% 8%,
+              rgba(56, 189, 248, 0.08),
+              transparent 32%
+            ),
+            radial-gradient(
+              circle at 50% 92%,
+              rgba(14, 165, 233, 0.07),
+              transparent 32%
+            )
+          `
+        }}
+      />
 
+      {/* TOP MOBILE WAVE */}
+      <svg
+        className="absolute top-0 left-0 w-full h-[150px]"
+        viewBox="0 0 800 150"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="
+            M0 42
+            C120 8 240 8 400 42
+            C560 76 680 76 800 42
+            L800 0
+            L0 0
+            Z
+          "
+          fill="rgba(56, 189, 248, 0.08)"
+        />
+
+        <path
+          d="
+            M0 65
+            C120 28 250 28 400 65
+            C550 102 680 102 800 65
+            L800 0
+            L0 0
+            Z
+          "
+          fill="rgba(14, 165, 233, 0.06)"
+        />
+
+        <path
+          d="
+            M0 65
+            C120 28 250 28 400 65
+            C550 102 680 102 800 65
+          "
+          fill="none"
+          stroke="rgba(125, 211, 252, 0.14)"
+          strokeWidth="2"
+        />
+      </svg>
+
+      {/* BOTTOM MOBILE WAVE */}
+      <svg
+        className="absolute bottom-0 left-0 w-full h-[170px]"
+        viewBox="0 0 800 170"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="
+            M0 85
+            C120 45 250 45 400 85
+            C550 125 680 125 800 85
+            L800 170
+            L0 170
+            Z
+          "
+          fill="rgba(14, 165, 233, 0.09)"
+        />
+
+        <path
+          d="
+            M0 105
+            C120 65 250 65 400 105
+            C550 145 680 145 800 105
+            L800 170
+            L0 170
+            Z
+          "
+          fill="rgba(56, 189, 248, 0.08)"
+        />
+
+        <path
+          d="
+            M0 85
+            C120 45 250 45 400 85
+            C550 125 680 125 800 85
+          "
+          fill="none"
+          stroke="rgba(125, 211, 252, 0.15)"
+          strokeWidth="2"
+        />
+      </svg>
+    </div>
+  );
+}
 export default function Layout() {
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -400,7 +511,7 @@ export default function Layout() {
       <div className="relative min-h-[100dvh] bg-background overflow-x-hidden">
 
         {/* Mobile ocean background */}
-        <OceanBackground />
+        <MobileOceanBackground />
 
         {/* Mobile header */}
         <header

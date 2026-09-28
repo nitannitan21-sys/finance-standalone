@@ -238,100 +238,98 @@ export default function Transactions() {
                   key={t.id}
                   className="
                     group
-                    px-4 md:px-5 py-4
+                    px-3 sm:px-4 md:px-5 py-4
                     hover:bg-muted/30
                     transition-colors
                   "
                 >
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
+  {/* Icon */}
+  <TransactionIcon type={t.type} />
 
-                    <TransactionIcon type={t.type} />
+  {/* Main transaction content */}
+  <div className="flex-1 min-w-0">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+      <div className="font-semibold text-foreground break-words leading-snug">
+        {t.note || 'No description'}
+      </div>
 
-                    <div className="flex-1 min-w-0">
+      <div className="shrink-0">
+        <TypeBadge type={t.type} />
+      </div>
+    </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
-                        <div className="font-semibold text-foreground truncate">
-                          {t.note || 'No description'}
-                        </div>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs text-muted-foreground">
+      <span>{t.date}</span>
 
-                        <TypeBadge type={t.type} />
-                      </div>
+      <span className="text-border">•</span>
 
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs text-muted-foreground">
+      <span className="break-words">
+        {fromAccount}
+        {toAccount ? ` → ${toAccount}` : ''}
+      </span>
 
-                        <span>{t.date}</span>
+      {t.category && (
+        <>
+          <span className="text-border">•</span>
+          <span>{t.category}</span>
+        </>
+      )}
+    </div>
+  </div>
 
-                        <span className="text-border">•</span>
+  {/* Amount + actions */}
+  <div className="flex flex-col items-end shrink-0 gap-1">
+    <div
+      className={`font-extrabold text-base md:text-lg ${amountColor}`}
+    >
+      {amountPrefix}{' '}
+      {formatMoneyByCurrency(
+        t.amount,
+        currency
+      )}
+    </div>
 
-                        <span>
-                          {fromAccount}
-                          {toAccount ? ` → ${toAccount}` : ''}
-                        </span>
+    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+      {currency}
+    </div>
 
-                        {t.category && (
-                          <>
-                            <span className="text-border">•</span>
-                            <span>{t.category}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+    <div className="flex items-center gap-1 mt-1">
+      <button
+        onClick={() => {
+          setEditing(t);
+          setModalOpen(true);
+        }}
+        className="
+          p-2 rounded-lg
+          text-muted-foreground
+          hover:text-foreground
+          hover:bg-accent
+          transition-colors
+        "
+        title="Edit transaction"
+      >
+        <Pencil className="w-4 h-4" />
+      </button>
 
-                    {/* Amount */}
-                    <div className="text-right shrink-0">
-                      <div
-                        className={`font-extrabold text-base md:text-lg ${amountColor}`}
-                      >
-                        {amountPrefix}{' '}
-                        {formatMoneyByCurrency(
-                          t.amount,
-                          currency
-                        )}
-                      </div>
-
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
-                        {currency}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 ml-1">
-
-                      <button
-                        onClick={() => {
-                          setEditing(t);
-                          setModalOpen(true);
-                        }}
-                        className="
-                          p-2 rounded-lg
-                          text-muted-foreground
-                          hover:text-foreground
-                          hover:bg-accent
-                          transition-colors
-                        "
-                        title="Edit transaction"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(t.id)}
-                        disabled={deleting}
-                        className="
-                          p-2 rounded-lg
-                          text-muted-foreground
-                          hover:text-rose-600
-                          hover:bg-rose-500/10
-                          disabled:opacity-50
-                          transition-colors
-                        "
-                        title="Delete transaction"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-
-                    </div>
-                  </div>
+      <button
+        onClick={() => handleDelete(t.id)}
+        disabled={deleting}
+        className="
+          p-2 rounded-lg
+          text-muted-foreground
+          hover:text-rose-600
+          hover:bg-rose-500/10
+          disabled:opacity-50
+          transition-colors
+        "
+        title="Delete transaction"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  </div>
+</div>
                 </div>
               );
             })}
