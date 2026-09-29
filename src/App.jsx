@@ -21,6 +21,7 @@ import Year from '@/pages/Year';
 import History from '@/pages/History';
 import Goals from '@/pages/Goals';
 import Budget from '@/pages/Budget';
+import Settings from '@/pages/Settings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -58,6 +59,7 @@ const AuthenticatedApp = () => {
           <Route path="/history" element={<History />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/budget" element={<Budget />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

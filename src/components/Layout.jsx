@@ -14,6 +14,7 @@ import {
   Target,
   SlidersHorizontal,
   LogOut,
+  Settings,
   Menu,
   Sun,
   Moon,
@@ -67,6 +68,12 @@ const NAV = [
     to: '/budget',
     label: 'Budget',
     icon: SlidersHorizontal,
+    end: false
+  },
+  {
+    to: '/settings',
+    label: 'Settings',
+    icon: Settings,
     end: false
   }
 ];
